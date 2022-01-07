@@ -1,4 +1,4 @@
-package main
+package Fib
 
 import "testing"
 
@@ -24,11 +24,5 @@ func TestFib(t *testing.T) {
 				t.Errorf("%v , expected %v but got %v ", test.description, test.expect, actual)
 			}
 		})
-	}
-}
-
-func BenchmarkFib(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		fib(i)
 	}
 }
