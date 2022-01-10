@@ -1,6 +1,8 @@
 package reverse
 
-import "errors"
+import (
+	"errors"
+)
 
 func Reverse(s string) (string, error) {
 	var x string

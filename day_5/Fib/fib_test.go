@@ -20,7 +20,7 @@ func TestFib(t *testing.T) {
 
 	for _, test := range fibTests {
 		t.Run(test.description, func(t *testing.T) {
-			if actual := fib(test.n); actual != test.expect {
+			if actual := Fib(test.n); actual != test.expect {
 				t.Errorf("%v , expected %v but got %v ", test.description, test.expect, actual)
 			}
 		})
