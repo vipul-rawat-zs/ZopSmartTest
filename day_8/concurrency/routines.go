@@ -1,7 +1,6 @@
 package concurrency
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -14,7 +13,7 @@ func Sum(arr []int, c chan int, s string) {
 		} else {
 			time.Sleep(time.Second * 3)
 		}
-		fmt.Printf("Go routine %v and sum %d\n", s, sum)
+		// fmt.Printf("Go routine %v and sum %d\n", s, sum)
 	}
 	c <- sum
 }
