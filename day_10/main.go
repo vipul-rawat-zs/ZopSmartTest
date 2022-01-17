@@ -4,6 +4,7 @@ import (
 	"log"
 	"repos/ZopSmartTest/day_10/userDB"
 
+	// the mysql driver package
 	_ "github.com/go-sql-driver/mysql"
 )
 
