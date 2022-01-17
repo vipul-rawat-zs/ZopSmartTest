@@ -71,23 +71,17 @@ func InsertEntry(db *sql.DB, tableName string, columns []string, values []interf
 
 	// add the values
 	query += ") VALUES ("
-	for _, value := range values {
+	for i := 0; i < len(values); i++ {
 
-		// switch case for the value type to add the correct syntax for query
-		// string values should be surrounded by single quotes
-		switch value.(type) {
-		case string:
-			query += fmt.Sprintf("'%s',", value)
-		default:
-			query += fmt.Sprintf("%v,", value)
-		}
+		// Prepare the query for the values
+		query += fmt.Sprintf("? ,")
 	}
 
 	// remove the `,` from the end of the string and add the ) for syntax
 	query = query[:len(query)-1]
 	query += ");"
 	// Execute the insert query
-	_, err := db.Exec(query)
+	_, err := db.Exec(query, values...)
 	if err != nil {
 		return err
 	}
