@@ -134,20 +134,13 @@ func GetSingleEntry(db *sql.DB, tableName string, PK int) (*UserData, error) {
 
 	// define query
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = ?", tableName)
-	rows, err := db.Query(query, PK)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	// move pointer to the first row
-	rows.Next()
+	rows := db.QueryRow(query, PK)
 
 	// create a new userData struct
 	user := new(UserData)
 
 	// scan the row into the userData struct
-	err = rows.Scan(&user.id, &user.name, &user.age, &user.address, &user.delete_flag)
+	err := rows.Scan(&user.id, &user.name, &user.age, &user.address, &user.delete_flag)
 	if err != nil {
 		return nil, err
 	}
