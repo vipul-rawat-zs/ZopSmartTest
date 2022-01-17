@@ -8,11 +8,11 @@ import (
 )
 
 type UserData struct {
-	ID          int
-	Name        string
-	Age         int
-	Address     string
-	Delete_flag int
+	id          int
+	name        string
+	age         int
+	address     string
+	delete_flag int
 }
 
 func GetConnection(driverName, user, password, dbname string) *sql.DB {
@@ -127,7 +127,7 @@ func GetSingleEntry(db *sql.DB, tableName string, PK int) (*UserData, error) {
 
 	rows.Next()
 	user := new(UserData)
-	err = rows.Scan(&user.ID, &user.Name, &user.Age, &user.Address, &user.Delete_flag)
+	err = rows.Scan(&user.id, &user.name, &user.age, &user.address, &user.delete_flag)
 	if err != nil {
 		return nil, err
 	}
