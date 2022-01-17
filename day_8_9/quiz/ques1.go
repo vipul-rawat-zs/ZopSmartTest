@@ -3,11 +3,13 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 )
 
-func worker(id int, jobs chan string) {
+func worker(id int, jobs chan string, wg *sync.WaitGroup) {
 	for j := range jobs {
+		wg.Done()
 		j = "test" + j
 		time.Sleep(time.Second)
 		fmt.Println("out ----> ", j)
@@ -17,11 +19,18 @@ func worker(id int, jobs chan string) {
 func main() {
 	task := 10
 	jobs := make(chan string, task)
+	wg := &sync.WaitGroup{}
+
 	for w := 1; w <= 3; w++ {
-		go worker(w, jobs)
+		wg.Add(1)
+		go worker(w, jobs, wg)
 	}
+
 	for j := 1; j <= task; j++ {
 		jobs <- strconv.Itoa(j)
 	}
-	time.Sleep(5 * time.Second)
+
+	wg.Wait()
+	close(jobs)
+	// time.Sleep(5 * time.Second)
 }

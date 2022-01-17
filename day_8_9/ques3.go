@@ -7,9 +7,9 @@ import (
 
 func f(v *int, mu *sync.Mutex, wg *sync.WaitGroup) {
 	defer wg.Done()
-	defer mu.Unlock()
 	mu.Lock()
 	*v++
+	mu.Unlock()
 }
 
 func main() {

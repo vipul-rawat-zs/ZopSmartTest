@@ -3,11 +3,13 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 )
 
-func worker(id int, jobs chan string) {
+func worker(id int, jobs chan string, wg *sync.WaitGroup) {
 	for j := range jobs {
+		defer wg.Done()
 		j = "test" + j
 		time.Sleep(time.Second)
 		fmt.Println("out ----> ", j)
@@ -17,14 +19,17 @@ func worker(id int, jobs chan string) {
 func main() {
 	task := 10
 	jobs := make(chan string, task)
+	wg := new(sync.WaitGroup)
+
 	for w := 1; w <= 3; w++ {
-		go worker(w, jobs)
+		wg.Add(1)
+		go worker(w, jobs, wg)
 	}
 	for j := 1; j <= task; j++ {
 		jobs <- strconv.Itoa(j)
 	}
 
-  // Make a blocking call in the main go routine
-  // using time.Sleep() to allow other go routines to perform execution
-	time.Sleep(5 * time.Second)
+	close(jobs)
+	wg.Wait() 
+
 }
