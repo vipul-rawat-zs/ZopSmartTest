@@ -45,7 +45,7 @@ func CreateTable(db *sql.DB, tableName string, columns []string) error {
 	query = query[:len(query)-1]
 	query += ")"
 
-	fmt.Println(query)
+	// fmt.Println(query)
 	_, err = db.Exec(query)
 	if err != nil {
 		return err
