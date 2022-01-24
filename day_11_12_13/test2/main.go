@@ -20,10 +20,17 @@ func main() {
 	log.Println("Connected!")
 
 	// Create a table.
-	columns := []string{"id INT NOT NULL AUTO_INCREMENT", "name VARCHAR(255) NOT NULL UNIQUE", "age INT", "address VARCHAR(255) NOT NULL", "delete_flag INT NOT NULL DEFAULT 0", "PRIMARY KEY (id)"}
+	columns := []string{"id INT NOT NULL AUTO_INCREMENT",
+		"name VARCHAR(255) NOT NULL UNIQUE",
+		"age INT",
+		"address VARCHAR(255) NOT NULL",
+		"delete_flag INT NOT NULL DEFAULT 0",
+		"PRIMARY KEY (id)"}
 	err := userDB.CreateTable(db, "user", columns)
 	if err != nil {
+		log.Printf("%T %v %s\n", err, err, err)
 		log.Fatalf("Error creating table: %v", err)
+
 	}
 	log.Println("Table created!")
 
