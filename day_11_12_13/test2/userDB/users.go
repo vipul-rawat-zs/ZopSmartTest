@@ -8,11 +8,11 @@ import (
 )
 
 type UserData struct {
-	id          int
-	name        string
-	age         int
-	address     string
-	delete_flag int
+	id         int
+	name       string
+	age        int
+	address    string
+	deleteFlag int
 }
 
 func GetConnection(driverName, user, password, dbname string) *sql.DB {
@@ -25,7 +25,7 @@ func GetConnection(driverName, user, password, dbname string) *sql.DB {
 	return db
 }
 
-// userSchema := `CREATE TABLE IF NOT EXISTS user (
+// CreateTable userSchema := `CREATE TABLE IF NOT EXISTS user (
 // 	id INT NOT NULL AUTO_INCREMENT,
 // 	name VARCHAR(255) NOT NULL UNIQUE,
 // 	age INT,
@@ -54,11 +54,11 @@ func CreateTable(db *sql.DB, tableName string, columns []string) error {
 	return nil
 }
 
-func InsertEntry(db *sql.DB, tableName string, columns []string, values []interface{}) error {
+func InsertEntry(db *sql.DB, tableName string, columns []string, values []interface{}) (UserData, error) {
 
 	// Error check for number of columns and values
 	if len(columns) != len(values) {
-		return errors.New("Wrong number of columns and values passed")
+		return UserData{}, errors.New("wrong number of columns and values passed")
 	}
 
 	// define query
@@ -77,15 +77,17 @@ func InsertEntry(db *sql.DB, tableName string, columns []string, values []interf
 		query += fmt.Sprintf("? ,")
 	}
 
-	// remove the `,` from the end of the string and add the ) for syntax
+	// remove the `,` from the end of the string and add the closing bracket for syntax
 	query = query[:len(query)-1]
 	query += ");"
 	// Execute the insert query
 	_, err := db.Exec(query, values...)
 	if err != nil {
-		return err
+		return UserData{}, err
 	}
-	return nil
+
+	user, err := GetSingleEntry(db, tableName, values[0].(int))
+	return *user, err
 }
 
 func DeleteEntry(db *sql.DB, tableName string, PK int) error {
@@ -109,9 +111,14 @@ func ShowAllEntries(db *sql.DB, tableName string) error {
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
 
-	// loop till htere are rows
+		}
+	}(rows)
+
+	// loop till there are rows
 	for rows.Next() {
 		var id int
 		var name string
@@ -140,7 +147,7 @@ func GetSingleEntry(db *sql.DB, tableName string, PK int) (*UserData, error) {
 	user := new(UserData)
 
 	// scan the row into the userData struct
-	err := rows.Scan(&user.id, &user.name, &user.age, &user.address, &user.delete_flag)
+	err := rows.Scan(&user.id, &user.name, &user.age, &user.address, &user.deleteFlag)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +158,7 @@ func UpdateTable(db *sql.DB, tableName string, PK int, column []string, value []
 
 	// Error check for number of columns and values
 	if len(column) != len(value) {
-		return errors.New("Wrong number of columns and values passed")
+		return errors.New("wrong number of columns and values passed")
 	}
 
 	// define query

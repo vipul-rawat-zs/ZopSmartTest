@@ -1,41 +1,100 @@
-package counter
+package server
 
 import (
-	"fmt"
-	"log"
+	"database/sql"
+	"encoding/json"
+	"github.com/gorilla/mux"
 	"net/http"
-	"strconv"
-	"sync"
+	"reflect"
 )
 
-var counter int
-var mutex = &sync.Mutex{}
+type User struct {
+	Id      int
+	Name    string
+	Address string
+}
 
-func echoString(w http.ResponseWriter, r *http.Request) {
-	_, err := fmt.Fprintf(w, "hello")
-	if err != nil {
-		log.Printf("err writing to the response\n")
+var db *sql.DB
+
+func handleUserApi(wr http.ResponseWriter, r *http.Request) {
+
+	// Establish a database connection if not already there
+	if db == nil {
+		db = GetConnection()
+	}
+	users := GetAllRecords(db)
+	jsonByte, err := json.Marshal(users)
+	logError(err, "error converting data to json")
+	wr.Header().Add("content-type", "application/json")
+	if len(users) == 0 {
+		wr.WriteHeader(http.StatusNoContent)
+		_, err := wr.Write([]byte(`{"error" : "no users found"}`))
+		logError(err, "")
+	} else {
+		wr.WriteHeader(http.StatusOK)
+		jsonString := string(jsonByte)
+		_, err := wr.Write([]byte(`{"data" : { "users" : ` + jsonString + `}}`))
+		logError(err, "")
 	}
 }
 
-func incrementCounter(w http.ResponseWriter, r *http.Request) {
-	mutex.Lock()
-	counter++
-	_, err := fmt.Fprintf(w, strconv.Itoa(counter))
-	if err != nil {
-		log.Printf("err writing to the response\n")
+func handleSingleUser(wr http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+
+		// get the variables defined in mux
+		vars := mux.Vars(r)
+
+		// establish the database connection
+		if db == nil {
+			db = GetConnection()
+		}
+
+		user := GetSelectedRecordById(db, vars["id"])
+
+		wr.Header().Add("content-type", "application/json")
+		if !reflect.DeepEqual(user, User{}) {
+			jsonByte, err := json.Marshal(user)
+			logError(err, "error converting data to json")
+			jsonString := string(jsonByte)
+
+			wr.WriteHeader(http.StatusOK)
+			_, err = wr.Write([]byte(`{"data" : { "users" : ` + jsonString + `}}`))
+			logError(err, "")
+		} else {
+			wr.WriteHeader(http.StatusNotFound)
+			_, err := wr.Write([]byte(`{ "error" : "id not found"}`))
+			logError(err, "")
+		}
 	}
-	mutex.Unlock()
 }
 
-func HandleFuncs() {
-	http.HandleFunc("/", echoString)
-
-	http.HandleFunc("/increment", incrementCounter)
-
-	err := http.ListenAndServe(":8000", nil)
-	if err != nil {
-		log.Printf("error while listening on port 8000 : %v\n", err)
+func handleApiPost(wr http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var u User
+	err := decoder.Decode(&u)
+	logError(err, "error decoding")
+	if db == nil {
+		db = GetConnection()
 	}
-	log.Println("listening on port 8000")
+	err = InsertRecords(db, u)
+	if err != nil {
+		wr.WriteHeader(405)
+	} else {
+		wr.WriteHeader(200)
+	}
+}
+
+func RouterMux() *mux.Router {
+	r := mux.NewRouter()
+	r.HandleFunc("/api/user/", handleUserApi).Methods("GET")
+	r.HandleFunc("/api/user/", handleApiPost).Methods("POST")
+	r.HandleFunc("/api/user/{id}", handleSingleUser)
+	return r
+}
+
+func CloseConnection() {
+	err := db.Close()
+	if err != nil {
+		logError(err, "")
+	}
 }
